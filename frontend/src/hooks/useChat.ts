@@ -25,6 +25,17 @@ function clearInteractiveState(message: Message): Message {
   return next
 }
 
+function messagesForApi(
+  messages: Pick<Message, 'role' | 'content'>[],
+): Pick<Message, 'role' | 'content'>[] {
+  return messages
+    .filter((message) => message.content.trim().length > 0)
+    .map(({ role, content }) => ({ role, content }))
+}
+
+const STATION_PICKER_AGENT_TEXT =
+  'Please confirm your station selection using the options below.'
+
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE])
   const [isMuted, setIsMuted] = useState(false)
@@ -80,7 +91,7 @@ export function useChat() {
       timestamp: new Date(),
     }
 
-    const historyForApi = [...messages, userMessage]
+    const historyForApi = messagesForApi([...messages, userMessage])
 
     setClarificationSelections({})
     setMessages((prev) => [
@@ -103,6 +114,7 @@ export function useChat() {
             if (chunk.options?.length) {
               return {
                 ...message,
+                content: message.content || STATION_PICKER_AGENT_TEXT,
                 clarificationGroups: message.journeySummary
                   ? undefined
                   : chunk.options,
