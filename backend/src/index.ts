@@ -13,9 +13,16 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 const app = express()
 const port = Number(process.env.PORT) || 8000
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'https://travel-agent-chat.netlify.app',
+  process.env.FRONTEND_URL,
+].filter((origin): origin is string => Boolean(origin))
+
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: allowedOrigins,
     credentials: true,
   }),
 )
