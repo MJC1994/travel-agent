@@ -89,3 +89,11 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.amendHint {
+  margin: var(--space-3) 0 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-secondary);
+  text-align: center;
+}

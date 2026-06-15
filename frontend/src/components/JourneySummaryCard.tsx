@@ -54,9 +54,14 @@ export function JourneySummaryCard({
           />
         )}
         <SummaryRow label="Passengers" value={formatPassengers(summary)} />
-        {summary.railcards && summary.railcards.length > 0 && (
-          <SummaryRow label="Railcard" value={summary.railcards.join(', ')} />
-        )}
+        <SummaryRow
+          label="Railcard"
+          value={
+            summary.railcards && summary.railcards.length > 0
+              ? summary.railcards.join(', ')
+              : 'None'
+          }
+        />
         {summary.via && <SummaryRow label="Via" value={summary.via} />}
       </dl>
 
@@ -68,6 +73,9 @@ export function JourneySummaryCard({
       >
         Find trains
       </button>
+      <p className={styles.amendHint}>
+        Just tell me if you need to amend anything here.
+      </p>
     </div>
   )
 }
