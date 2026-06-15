@@ -22,18 +22,23 @@ const ROUTE_SIMPLE =
   /^(?<from>.+?)\s+to\s+(?<to>.+?)(?:\s+(?:on|at|next|this|today|tomorrow|single|return|with|for|using|depart|leaving|in the)|[,.]|$)/i
 
 const UNLIKELY_STATION_QUERY =
-  /^(?:I(?:'m|\s+am)?|going|travel(?:l?ing)?|head(?:ing)?|get(?:ting)?|we(?:'re|\s+are)?|want|need|help|\d+)/i
+  /^(?:I(?:'m|\s+am)?|going|travel(?:l?ing)?|head(?:ing)?|get(?:ting)?|we(?:'re|\s+are)?|want|need|help|sorry|please|actually|can i|could i|change|update|amend|\d+)/i
+
+const DATE_OR_TIME_PHRASE =
+  /\b(?:last|first|next|this)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|week|weekend|month|january|february|march|april|may|june|july|august|september|october|november|december|\d)/i
+
+const AMENDMENT_HINT =
+  /\b(?:change|update|amend|switch|instead|actually|sorry|correct|wrong|meant)\b/i
 
 interface ParsedRoute {
   from?: string
   to?: string
 }
 
-function isPlausibleStationQuery(query: string): boolean {
-  const trimmed = cleanStationPhrase(query)
-  if (trimmed.length < 2) return false
-  if (UNLIKELY_STATION_QUERY.test(trimmed)) return false
-  return true
+interface ConfirmedStations {
+  origin?: string
+  destination?: string
+  via?: string
 }
 
 function cleanStationPhrase(value: string): string {
@@ -44,8 +49,67 @@ function cleanStationPhrase(value: string): string {
     .trim()
 }
 
-function extractConfirmedStations(messages: ChatMessage[]): ConfirmedStations {
-  const confirmed: ConfirmedStations = {}
+function isPlausibleStationQuery(query: string): boolean {
+  const trimmed = cleanStationPhrase(query)
+  if (trimmed.length < 2) return false
+  if (UNLIKELY_STATION_QUERY.test(trimmed)) return false
+  if (DATE_OR_TIME_PHRASE.test(trimmed)) return false
+  return true
+}
+
+function isConfirmationMessage(content: string): boolean {
+  return /(?:^|[.\s])(Origin|Destination|Via):/i.test(content)
+}
+
+function isAmendmentMessage(content: string): boolean {
+  if (isConfirmationMessage(content)) return false
+  if (ROUTE_FROM_TO.test(content)) return false
+
+  const route = extractRoute(content)
+  if (
+    route.from &&
+    route.to &&
+    isPlausibleStationQuery(route.from) &&
+    isPlausibleStationQuery(route.to)
+  ) {
+    return false
+  }
+
+  return AMENDMENT_HINT.test(content)
+}
+
+function extractRoute(text: string): ParsedRoute {
+  const fromTo = text.match(ROUTE_FROM_TO)
+  if (fromTo?.groups?.from && fromTo.groups.to) {
+    const from = cleanStationPhrase(fromTo.groups.from)
+    const to = cleanStationPhrase(fromTo.groups.to)
+    if (isPlausibleStationQuery(from) && isPlausibleStationQuery(to)) {
+      return { from, to }
+    }
+  }
+
+  const destinationOnly = text.match(ROUTE_DESTINATION_ONLY)
+  if (destinationOnly?.groups?.to) {
+    const to = cleanStationPhrase(destinationOnly.groups.to)
+    if (isPlausibleStationQuery(to)) {
+      return { to }
+    }
+  }
+
+  const simple = text.match(ROUTE_SIMPLE)
+  if (simple?.groups?.from && simple.groups.to) {
+    const from = cleanStationPhrase(simple.groups.from)
+    const to = cleanStationPhrase(simple.groups.to)
+    if (isPlausibleStationQuery(from) && isPlausibleStationQuery(to)) {
+      return { from, to }
+    }
+  }
+
+  return {}
+}
+
+function extractEstablishedStations(messages: ChatMessage[]): ConfirmedStations {
+  const established: ConfirmedStations = {}
 
   for (const message of messages) {
     if (message.role !== 'user') continue
@@ -54,52 +118,51 @@ function extractConfirmedStations(messages: ChatMessage[]): ConfirmedStations {
       const field = match.groups?.field?.toLowerCase() as StationField | undefined
       const value = match.groups?.value?.trim()
       if (field && value) {
-        confirmed[field] = value
+        established[field] = value
+      }
+    }
+
+    if (isConfirmationMessage(message.content)) continue
+
+    const route = extractRoute(message.content)
+    if (route.from && isPlausibleStationQuery(route.from)) {
+      const resolution = resolveStation(route.from)
+      if (resolution.status === 'resolved') {
+        established.origin = resolution.station.name
+      }
+    }
+    if (route.to && isPlausibleStationQuery(route.to)) {
+      const resolution = resolveStation(route.to)
+      if (resolution.status === 'resolved') {
+        established.destination = resolution.station.name
       }
     }
   }
 
-  return confirmed
+  return established
 }
 
-function isConfirmationMessage(content: string): boolean {
-  return /(?:^|[.\s])(Origin|Destination|Via):/i.test(content)
+function latestRouteMessage(messages: ChatMessage[]): ChatMessage | undefined {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index]
+    if (message?.role !== 'user') continue
+    if (isConfirmationMessage(message.content)) continue
+    if (isAmendmentMessage(message.content)) continue
+
+    const route = extractRoute(message.content)
+    if (route.from || route.to) {
+      return message
+    }
+  }
+  return undefined
 }
 
-function extractRoute(text: string): ParsedRoute {
-  const fromTo = text.match(ROUTE_FROM_TO)
-  if (fromTo?.groups?.from && fromTo.groups.to) {
-    return {
-      from: cleanStationPhrase(fromTo.groups.from),
-      to: cleanStationPhrase(fromTo.groups.to),
-    }
+function latestUserMessage(messages: ChatMessage[]): ChatMessage | undefined {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index]
+    if (message?.role === 'user') return message
   }
-
-  const destinationOnly = text.match(ROUTE_DESTINATION_ONLY)
-  if (destinationOnly?.groups?.to) {
-    return {
-      to: cleanStationPhrase(destinationOnly.groups.to),
-    }
-  }
-
-  const simple = text.match(ROUTE_SIMPLE)
-  if (simple?.groups?.from && simple.groups.to) {
-    const from = cleanStationPhrase(simple.groups.from)
-    if (isPlausibleStationQuery(from)) {
-      return {
-        from,
-        to: cleanStationPhrase(simple.groups.to),
-      }
-    }
-  }
-
-  return {}
-}
-
-interface ConfirmedStations {
-  origin?: string
-  destination?: string
-  via?: string
+  return undefined
 }
 
 function addStationLookup(
@@ -132,43 +195,46 @@ function addStationLookup(
   return groups
 }
 
-function latestJourneyMessage(messages: ChatMessage[]): ChatMessage | undefined {
-  for (let index = messages.length - 1; index >= 0; index -= 1) {
-    const message = messages[index]
-    if (message?.role !== 'user') continue
-    if (isConfirmationMessage(message.content)) continue
-    if (extractRoute(message.content).from || extractRoute(message.content).to) {
-      return message
-    }
-  }
-  return undefined
-}
-
 export function runPreflight(messages: ChatMessage[]): PreflightResult {
   let clarificationGroups: ClarificationGroup[] = []
   const resolvedLines: string[] = []
   let missingOrigin = false
-  const confirmed = extractConfirmedStations(messages)
+  const established = extractEstablishedStations(messages)
+  const latestUser = latestUserMessage(messages)
+  const isAmendment =
+    latestUser !== undefined && isAmendmentMessage(latestUser.content)
 
   for (const field of ['origin', 'destination', 'via'] as const) {
-    const value = confirmed[field]
+    const value = established[field]
     if (value) {
-      resolvedLines.push(`${field}: ${value} (confirmed by user)`)
+      resolvedLines.push(`${field}: ${value} (established in conversation)`)
     }
   }
 
-  const needsOrigin = !confirmed.origin
-  const needsDestination = !confirmed.destination
-  const needsVia = !confirmed.via
+  const needsOrigin = !established.origin
+  const needsDestination = !established.destination
+  const needsVia = !established.via
 
-  if (!needsOrigin && !needsDestination && !needsVia) {
+  if (
+    isAmendment &&
+    established.origin &&
+    established.destination &&
+    !needsVia
+  ) {
     return {
-      promptContext: formatPromptContext(resolvedLines),
+      promptContext: formatPromptContext(resolvedLines, { amendment: true }),
       clarificationGroups: [],
     }
   }
 
-  const journeyMessage = latestJourneyMessage(messages)
+  if (!needsOrigin && !needsDestination && !needsVia) {
+    return {
+      promptContext: formatPromptContext(resolvedLines, { amendment: isAmendment }),
+      clarificationGroups: [],
+    }
+  }
+
+  const journeyMessage = latestRouteMessage(messages)
   if (journeyMessage) {
     const route = extractRoute(journeyMessage.content)
 
@@ -180,12 +246,12 @@ export function runPreflight(messages: ChatMessage[]): PreflightResult {
           clarificationGroups,
           resolvedLines,
         )
-      } else if (!confirmed.origin) {
+      } else if (!established.origin) {
         missingOrigin = true
       }
     }
 
-    if (needsDestination && route.to) {
+    if (needsDestination && route.to && isPlausibleStationQuery(route.to)) {
       clarificationGroups = addStationLookup(
         route.to,
         'destination',
@@ -193,19 +259,26 @@ export function runPreflight(messages: ChatMessage[]): PreflightResult {
         resolvedLines,
       )
     }
+  } else if (needsOrigin) {
+    missingOrigin = true
   }
 
   return {
-    promptContext: formatPromptContext(resolvedLines, { missingOrigin }),
+    promptContext: formatPromptContext(resolvedLines, {
+      missingOrigin,
+      amendment: isAmendment,
+    }),
     clarificationGroups,
   }
 }
 
 function formatPromptContext(
   resolvedLines: string[],
-  options: { missingOrigin?: boolean } = {},
+  options: { missingOrigin?: boolean; amendment?: boolean } = {},
 ): string {
-  if (resolvedLines.length === 0 && !options.missingOrigin) return ''
+  if (resolvedLines.length === 0 && !options.missingOrigin && !options.amendment) {
+    return ''
+  }
 
   let context = ''
 
@@ -223,7 +296,10 @@ function formatPromptContext(
     line.startsWith('destination:'),
   )
 
-  if (hasOrigin && hasDestination) {
+  if (options.amendment && hasOrigin && hasDestination) {
+    context +=
+      '\n\n## Journey amendment\n- The user is updating an existing journey. Keep the established origin and destination unless they explicitly change stations. Update date, time, passengers, or railcards as requested, then call present_journey_summary with the full revised journey.'
+  } else if (hasOrigin && hasDestination) {
     context +=
       '\n\nOrigin and destination are confirmed. If the user has not given an outbound time yet, ask for travel time now. Reference any date they already mentioned in the conversation.'
   }
