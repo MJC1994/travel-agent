@@ -1,0 +1,28 @@
+.app {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  background: var(--color-surface);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--layout-max-width);
+  min-height: 100dvh;
+  background: var(--color-background);
+  box-shadow: var(--shadow-lg);
+}
+
+@media (min-width: 520px) {
+  .app {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .container {
+    min-height: calc(100dvh - var(--space-12));
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+  }
+}

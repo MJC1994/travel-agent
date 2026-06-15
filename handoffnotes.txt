@@ -1,0 +1,83 @@
+This API call is what I'd make in my website.
+
+curl 'https://api-southeastern.stage.otrl.io/jp/journey-plan' \
+
+  -H 'accept: application/json' \
+
+  -H 'accept-language: en-GB,en-US;q=0.9,en;q=0.8' \
+
+  -H 'cache-control: no-cache' \
+
+  -H 'content-type: application/json' \
+
+  -b 'bid_3ef9c9f3aac6b6b28c571a4200ef8a4d=890cf14f-4b25-4208-8de1-232f16b25dcf; _gcl_au=1.1.1020591256.1779441381; _ga=GA1.1.947292978.1779441381; _ga_NGEMJ57JZX=GS2.1.s1781449077$o191$g1$t1781449100$j37$l0$h0; _ga_J4HSHVPV5Y=GS2.1.s1781449077$o12$g1$t1781449100$j37$l0$h0' \
+
+  -H 'origin: https://southeastern.stage.otrl.io' \
+
+  -H 'pragma: no-cache' \
+
+  -H 'priority: u=1, i' \
+
+  -H 'referer: https://southeastern.stage.otrl.io/' \
+
+  -H 'sec-ch-ua: "Chromium";v="149", "Not)A;Brand";v="24"' \
+
+  -H 'sec-ch-ua-mobile: ?0' \
+
+  -H 'sec-ch-ua-platform: "macOS"' \
+
+  -H 'sec-fetch-dest: empty' \
+
+  -H 'sec-fetch-mode: cors' \
+
+  -H 'sec-fetch-site: same-site' \
+
+  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36' \
+
+  -H 'x-access-token: 86512cad76131783f5dae4346ddc3fb39f6f7c0f74b3039bff70ca4015ade034' \
+
+  -H 'x-device-fingerprint: dfp-v1-2bc4vq64c0w-2g26h3a4zmd' \
+
+  -H 'x-trace-token: booking-engine@/6d7b01f0680111f191467fc76cb4e6d4-4' \
+
+  --data-raw '{"origin":"5686","destination":"5685","outward":{"rangeStart":"2026-07-21T12:35:00","rangeEnd":"2026-07-22T04:30:00","arriveDepart":"Depart"},"openReturn":false,"adults":2,"children":1,"disableGroupSavings":false,"numJourneys":3,"showCheapest":false,"doRealTime":false,"keepAllZoneFares":false,"filterFares":true,"delayRepayFiltering":false,"isAmending":false,"orderId":null,"preferences":{"loadEarlier":true},"channel":"web","railcards":["NEW"]}'
+
+
+
+
+And it would hand off to the following URL.
+
+
+https://southeastern.stage.otrl.io/journeys-grid/WPL/WOK/2026-07-21T12:35//2/1/NEWx1?departNow=no&realTime=no&searchPreferences=&showAdditionalRoutes=no&showCheapest=no&tocSpecific=no&utm_campaign=southeastern.stage.otrl.io&utm_content=southeastern.stage.otrl.io&utm_medium=OnTrack_Retail_Widgets-script&utm_source=southeastern.stage.otrl.io
+
+
+
+  This is an example of a search when searching for a adult return ticket.
+
+  curl 'https://api-southeastern.stage.otrl.io/jp/journey-plan' \
+  -H 'accept: application/json' \
+  -H 'accept-language: en-GB,en-US;q=0.9,en;q=0.8' \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -b 'bid_3ef9c9f3aac6b6b28c571a4200ef8a4d=890cf14f-4b25-4208-8de1-232f16b25dcf; _gcl_au=1.1.1020591256.1779441381; _ga=GA1.1.947292978.1779441381; ORDER=eyJvcmRlciI6eyJpZCI6bnVsbCwidG90YWxQcmljZSI6bnVsbCwiam91cm5leXNBbW91bnQiOjAsImpvdXJuZXlzIjpbXX19; _ga_NGEMJ57JZX=GS2.1.s1781449077$o191$g1$t1781449270$j27$l0$h0; _ga_J4HSHVPV5Y=GS2.1.s1781449077$o12$g1$t1781449270$j27$l0$h0' \
+  -H 'origin: https://southeastern.stage.otrl.io' \
+  -H 'pragma: no-cache' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://southeastern.stage.otrl.io/' \
+  -H 'sec-ch-ua: "Chromium";v="149", "Not)A;Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "macOS"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: same-site' \
+  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36' \
+  -H 'x-access-token: 86512cad76131783f5dae4346ddc3fb39f6f7c0f74b3039bff70ca4015ade034' \
+  -H 'x-device-fingerprint: dfp-v1-2bc4vq64c0w-2g26h3a4zmd' \
+  -H 'x-trace-token: booking-engine@/6d7b01f0680111f191467fc76cb4e6d4-20' \
+  --data-raw '{"origin":"5685","destination":"5631","outward":{"rangeStart":"2026-07-07T12:35:00","rangeEnd":"2026-07-08T04:15:00","arriveDepart":"Depart"},"openReturn":false,"adults":1,"children":0,"disableGroupSavings":true,"numJourneys":3,"showCheapest":false,"doRealTime":false,"keepAllZoneFares":false,"filterFares":true,"delayRepayFiltering":false,"isAmending":false,"orderId":null,"preferences":{"loadEarlier":true},"channel":"web","railcards":["NEW"],"return":{"rangeStart":"2026-07-07T14:45:00","rangeEnd":"2026-07-08T04:30:00","arriveDepart":"Depart"}}'
+
+
+  https://southeastern.stage.otrl.io/journeys-grid/WOK/GLD/2026-07-07T12:35/2026-07-07T14:45/1//NEWx1?departNow=no&realTime=no&searchPreferences=%2C%2C%2C%2Ctrue&showAdditionalRoutes=no&showCheapest=no&tocSpecific=no
+
+
+  

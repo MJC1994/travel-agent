@@ -1,0 +1,10 @@
+code	name
+2TR	Two Together Railcard
+DIC	Disabled Child Railcard
+FAM	Family & Friends Railcard
+NEW	Network Railcard
+SRN	Senior Railcard
+TST	26-30 Railcard
+TSU	16-17 Saver
+VET	Veterans Railcard
+YNG	16-25 Railcard

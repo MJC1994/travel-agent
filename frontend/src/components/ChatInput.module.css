@@ -1,0 +1,127 @@
+.container {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-input);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  background: var(--color-background);
+  border-top: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.inputRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.textarea {
+  flex: 1;
+  min-height: 44px;
+  max-height: 120px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-snug);
+  color: var(--color-text-primary);
+  resize: none;
+  field-sizing: content;
+  transition: box-shadow var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default);
+}
+
+.textarea::placeholder {
+  color: var(--color-gray-400);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-black);
+  box-shadow: var(--shadow-input);
+}
+
+.textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.micButton,
+.sendButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default),
+    transform var(--duration-fast) var(--ease-default);
+}
+
+.micButton {
+  background: var(--color-gray-100);
+  color: var(--color-text-primary);
+}
+
+.micButton:hover:not(:disabled) {
+  background: var(--color-gray-200);
+}
+
+.micButton:focus-visible,
+.sendButton:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-input);
+}
+
+.micButton:disabled,
+.sendButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.micButton.recording {
+  background: var(--color-green);
+  color: var(--color-white);
+  animation: pulse var(--duration-slow) var(--ease-spring) infinite alternate;
+}
+
+.sendButton {
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.sendButton:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.sendButton:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.recordingHint {
+  margin: 0;
+  padding-left: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-green-dark);
+  font-weight: var(--font-weight-medium);
+}
+
+@keyframes pulse {
+  from {
+    box-shadow: 0 0 0 0 rgba(6, 193, 103, 0.4);
+  }
+  to {
+    box-shadow: 0 0 0 8px rgba(6, 193, 103, 0);
+  }
+}

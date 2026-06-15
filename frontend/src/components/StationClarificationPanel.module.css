@@ -1,0 +1,135 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+}
+
+.optionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.optionGroupLabel {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.optionList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.optionButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-white);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default),
+    transform var(--duration-fast) var(--ease-default);
+}
+
+.optionButton:hover:not(:disabled) {
+  background: var(--color-gray-50);
+  border-color: var(--color-black);
+}
+
+.optionButtonSelected {
+  background: var(--color-black);
+  border-color: var(--color-black);
+  color: var(--color-white);
+}
+
+.optionButtonSelected:hover:not(:disabled) {
+  background: var(--color-gray-800);
+  border-color: var(--color-gray-800);
+}
+
+.optionButtonSelected .optionCrs {
+  color: var(--color-gray-300);
+}
+
+.optionButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.optionButton:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-input);
+}
+
+.optionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.optionLabel {
+  flex: 1;
+}
+
+.optionCrs {
+  flex-shrink: 0;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.confirmButton {
+  width: 100%;
+  min-height: 48px;
+  margin-top: var(--space-1);
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-black);
+  color: var(--color-white);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition:
+    opacity var(--duration-fast) var(--ease-default),
+    transform var(--duration-fast) var(--ease-default);
+}
+
+.confirmButton:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.confirmButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.confirmButton:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-input);
+}
+
+.confirmButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
