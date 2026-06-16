@@ -66,22 +66,6 @@ function speechErrorMessage(error: string): string {
   }
 }
 
-async function ensureMicrophonePermission(): Promise<string | null> {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    return null
-  }
-
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    for (const track of stream.getTracks()) {
-      track.stop()
-    }
-    return null
-  } catch {
-    return 'Microphone access was denied. Allow the mic in your browser settings and try again.'
-  }
-}
-
 export function useSpeechRecognition({
   onInterimTranscript,
   onFinalTranscript,
@@ -186,25 +170,21 @@ export function useSpeechRecognition({
     }
   }, [])
 
-  const startListening = useCallback(async () => {
+  // Must run synchronously inside the click handler. Awaiting anything (e.g.
+  // getUserMedia) before start() breaks the user-gesture requirement that Safari
+  // enforces and lets the browser grab the mic so SpeechRecognition can't.
+  const startListening = useCallback(() => {
     if (!recognitionRef.current || wantsListenRef.current) return
 
     setSpeechError(null)
-    const permissionError = await ensureMicrophonePermission()
-    if (permissionError) {
-      setSpeechError(permissionError)
-      return
-    }
-
     wantsListenRef.current = true
     setIsRecording(true)
 
     try {
       recognitionRef.current.start()
     } catch {
-      wantsListenRef.current = false
-      setIsRecording(false)
-      setSpeechError('Could not start the microphone. Try again in a moment.')
+      // Some engines throw if start() is called while still winding down — the
+      // onend auto-restart will pick it back up, so keep the session open.
     }
   }, [])
 
@@ -225,7 +205,7 @@ export function useSpeechRecognition({
     if (wantsListenRef.current) {
       stopListening()
     } else {
-      void startListening()
+      startListening()
     }
   }, [startListening, stopListening])
 
