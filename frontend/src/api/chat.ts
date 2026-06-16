@@ -1,4 +1,5 @@
 import type { ClarificationGroup, JourneySummary } from '../types/message'
+import { fetchWithRetry } from './fetchWithRetry'
 
 export interface StreamChunk {
   text?: string
@@ -22,7 +23,7 @@ export async function* streamChat(
   }
 
   const apiBase = import.meta.env.VITE_API_BASE_URL ?? ''
-  const response = await fetch(`${apiBase}/api/chat`, {
+  const response = await fetchWithRetry(`${apiBase}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
