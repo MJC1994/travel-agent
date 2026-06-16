@@ -52,19 +52,15 @@ export interface UseSpeechRecognitionOptions {
   onFinalTranscript?: (transcript: string) => void
 }
 
+const TRANSIENT_ERRORS = new Set(['no-speech', 'aborted', 'network'])
+
 function speechErrorMessage(error: string): string {
   switch (error) {
     case 'not-allowed':
     case 'service-not-allowed':
       return 'Microphone access was blocked. Allow the mic in your browser settings and try again.'
-    case 'no-speech':
-      return "I didn't hear anything — try speaking again."
-    case 'network':
-      return 'Speech recognition needs an internet connection (Chrome sends audio to Google).'
     case 'audio-capture':
       return 'No microphone was found. Check your device settings.'
-    case 'aborted':
-      return ''
     default:
       return `Speech recognition error: ${error}`
   }
@@ -90,13 +86,13 @@ export function useSpeechRecognition({
   onInterimTranscript,
   onFinalTranscript,
 }: UseSpeechRecognitionOptions) {
-  const [isListening, setIsListening] = useState(false)
+  /** True while the user has the mic session open — stable UI, not tied to each browser restart. */
+  const [isRecording, setIsRecording] = useState(false)
   const [isSupported, setIsSupported] = useState(false)
   const [speechError, setSpeechError] = useState<string | null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const callbacksRef = useRef({ onInterimTranscript, onFinalTranscript })
   const wantsListenRef = useRef(false)
-  const isListeningRef = useRef(false)
   const restartTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -115,8 +111,6 @@ export function useSpeechRecognition({
     recognition.lang = 'en-GB'
 
     recognition.onstart = () => {
-      isListeningRef.current = true
-      setIsListening(true)
       setSpeechError(null)
     }
 
@@ -143,29 +137,32 @@ export function useSpeechRecognition({
     }
 
     recognition.onerror = (event) => {
+      if (TRANSIENT_ERRORS.has(event.error)) {
+        return
+      }
+
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        wantsListenRef.current = false
+        setIsRecording(false)
+      }
+
       const message = speechErrorMessage(event.error)
       if (message) {
         setSpeechError(message)
       }
-      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-        wantsListenRef.current = false
-      }
     }
 
     recognition.onend = () => {
-      isListeningRef.current = false
-      setIsListening(false)
+      if (!wantsListenRef.current) return
 
-      if (wantsListenRef.current) {
-        restartTimerRef.current = window.setTimeout(() => {
-          if (!wantsListenRef.current || !recognitionRef.current) return
-          try {
-            recognitionRef.current.start()
-          } catch {
-            wantsListenRef.current = false
-          }
-        }, 250)
-      }
+      restartTimerRef.current = window.setTimeout(() => {
+        if (!wantsListenRef.current || !recognitionRef.current) return
+        try {
+          recognitionRef.current.start()
+        } catch {
+          // Already running — ignore.
+        }
+      }, 300)
     }
 
     recognitionRef.current = recognition
@@ -195,28 +192,32 @@ export function useSpeechRecognition({
     }
 
     wantsListenRef.current = true
+    setIsRecording(true)
 
     try {
       recognitionRef.current.start()
     } catch {
       wantsListenRef.current = false
+      setIsRecording(false)
       setSpeechError('Could not start the microphone. Try again in a moment.')
     }
   }, [])
 
   const stopListening = useCallback(() => {
     wantsListenRef.current = false
+    setIsRecording(false)
+    setSpeechError(null)
+
     if (restartTimerRef.current) {
       window.clearTimeout(restartTimerRef.current)
       restartTimerRef.current = null
     }
+
     recognitionRef.current?.stop()
-    isListeningRef.current = false
-    setIsListening(false)
   }, [])
 
   const toggleListening = useCallback(() => {
-    if (wantsListenRef.current || isListeningRef.current) {
+    if (wantsListenRef.current) {
       stopListening()
     } else {
       void startListening()
@@ -224,7 +225,7 @@ export function useSpeechRecognition({
   }, [startListening, stopListening])
 
   return {
-    isListening,
+    isListening: isRecording,
     isSupported,
     speechError,
     startListening,

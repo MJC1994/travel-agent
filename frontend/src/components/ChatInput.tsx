@@ -66,9 +66,9 @@ export function ChatInput({
             aria-pressed={isRecording}
           >
             {isRecording ? (
-              <MicOff size={22} strokeWidth={2} />
-            ) : (
               <Mic size={22} strokeWidth={2} />
+            ) : (
+              <MicOff size={22} strokeWidth={2} />
             )}
           </button>
 
@@ -94,17 +94,15 @@ export function ChatInput({
           </button>
         </div>
 
-        {isRecording && (
+        {isRecording ? (
           <p className={styles.recordingHint} role="status">
             Listening… fields update as you speak. Tap the mic to stop.
           </p>
-        )}
-
-        {!isRecording && speechError && (
+        ) : speechError ? (
           <p className={styles.speechError} role="alert">
             {speechError}
           </p>
-        )}
+        ) : null}
 
         {!speechSupported && (
           <p className={styles.speechUnsupported}>
