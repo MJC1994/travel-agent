@@ -75,6 +75,9 @@ function App() {
           isRecording={speech.isListening}
           speechSupported={speech.isSupported}
           speechError={speech.speechError}
+          voiceTranscript={
+            journeyForm.liveTranscript || journeyForm.sessionTranscript
+          }
           onToggleRecording={speech.toggleListening}
         />
       </div>

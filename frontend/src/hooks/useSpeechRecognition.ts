@@ -115,21 +115,26 @@ export function useSpeechRecognition({
     }
 
     recognition.onresult = (event) => {
-      let interim = ''
-      let finalChunk = ''
-
-      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+      // Interim must be rebuilt from all non-final results — Chrome only sends
+      // new segments from resultIndex, which would otherwise be fragments like " Brighton".
+      let interimTranscript = ''
+      for (let index = 0; index < event.results.length; index += 1) {
         const result = event.results[index]
-        const transcript = result[0]?.transcript ?? ''
-        if (result.isFinal) {
-          finalChunk += transcript
-        } else {
-          interim += transcript
+        if (!result.isFinal) {
+          interimTranscript += result[0]?.transcript ?? ''
         }
       }
 
-      if (interim.trim()) {
-        callbacksRef.current.onInterimTranscript?.(interim.trim())
+      let finalChunk = ''
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        const result = event.results[index]
+        if (result.isFinal) {
+          finalChunk += result[0]?.transcript ?? ''
+        }
+      }
+
+      if (interimTranscript.trim()) {
+        callbacksRef.current.onInterimTranscript?.(interimTranscript.trim())
       }
       if (finalChunk.trim()) {
         callbacksRef.current.onFinalTranscript?.(finalChunk.trim())

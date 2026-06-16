@@ -1,4 +1,4 @@
-import { useState, useRef, type FormEvent, type KeyboardEvent } from 'react'
+import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent } from 'react'
 import { Mic, MicOff, ArrowUp } from 'lucide-react'
 import styles from './ChatInput.module.css'
 
@@ -9,6 +9,7 @@ interface ChatInputProps {
   isRecording?: boolean
   speechSupported?: boolean
   speechError?: string | null
+  voiceTranscript?: string
   onToggleRecording?: () => void
 }
 
@@ -19,17 +20,27 @@ export function ChatInput({
   isRecording = false,
   speechSupported = false,
   speechError = null,
+  voiceTranscript = '',
   onToggleRecording,
 }: ChatInputProps) {
   const [text, setText] = useState('')
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const wasRecordingRef = useRef(false)
 
-  const canSend = text.trim().length > 0 && !disabled
+  useEffect(() => {
+    if (wasRecordingRef.current && !isRecording && voiceTranscript.trim()) {
+      setText(voiceTranscript)
+    }
+    wasRecordingRef.current = isRecording
+  }, [isRecording, voiceTranscript])
+
+  const displayText = isRecording ? voiceTranscript : text
+  const canSend = displayText.trim().length > 0 && !disabled && !isRecording
 
   function handleSubmit(e?: FormEvent) {
     e?.preventDefault()
-    const trimmed = text.trim()
-    if (!trimmed || disabled) return
+    const trimmed = displayText.trim()
+    if (!trimmed || disabled || isRecording) return
     onSend(trimmed)
     setText('')
     inputRef.current?.focus()
@@ -75,12 +86,13 @@ export function ChatInput({
           <textarea
             ref={inputRef}
             className={styles.textarea}
-            value={text}
+            value={displayText}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Describe your journey…"
             rows={1}
             disabled={disabled}
+            readOnly={isRecording}
             aria-label="Message input"
           />
 
