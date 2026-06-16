@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 import express from 'express'
 import { MODEL } from './gemini.js'
 import { chatRouter } from './routes/chat.js'
+import { journeyExtractRouter } from './routes/journey-extract.js'
 import { stationsRouter } from './routes/stations.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -37,6 +38,7 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.use('/api', chatRouter)
+app.use('/api', journeyExtractRouter)
 app.use('/api', stationsRouter)
 
 app.listen(port, () => {

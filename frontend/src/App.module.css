@@ -11,8 +11,10 @@
   width: 100%;
   max-width: var(--layout-max-width);
   min-height: 100dvh;
+  max-height: 100dvh;
   background: var(--color-background);
   box-shadow: var(--shadow-lg);
+  overflow: hidden;
 }
 
 @media (min-width: 520px) {
