@@ -5,11 +5,23 @@ import styles from './ChatInput.module.css'
 interface ChatInputProps {
   onSend: (text: string) => void
   disabled?: boolean
+  micDisabled?: boolean
+  isRecording?: boolean
+  speechSupported?: boolean
+  speechError?: string | null
+  onToggleRecording?: () => void
 }
 
-export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
+export function ChatInput({
+  onSend,
+  disabled = false,
+  micDisabled = false,
+  isRecording = false,
+  speechSupported = false,
+  speechError = null,
+  onToggleRecording,
+}: ChatInputProps) {
   const [text, setText] = useState('')
-  const [isRecording, setIsRecording] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const canSend = text.trim().length > 0 && !disabled
@@ -31,8 +43,8 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
   }
 
   function toggleRecording() {
-    setIsRecording((prev) => !prev)
-    // STT integration placeholder — Phase 2 per PRD
+    if (!speechSupported || !onToggleRecording) return
+    onToggleRecording()
   }
 
   return (
@@ -43,8 +55,14 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
             type="button"
             className={`${styles.micButton} ${isRecording ? styles.recording : ''}`}
             onClick={toggleRecording}
-            disabled={disabled}
-            aria-label={isRecording ? 'Stop recording' : 'Tap to speak'}
+            disabled={micDisabled || !speechSupported}
+            aria-label={
+              !speechSupported
+                ? 'Speech not supported in this browser'
+                : isRecording
+                  ? 'Stop recording'
+                  : 'Tap to speak'
+            }
             aria-pressed={isRecording}
           >
             {isRecording ? (
@@ -60,7 +78,7 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Where are you going?"
+            placeholder="Describe your journey…"
             rows={1}
             disabled={disabled}
             aria-label="Message input"
@@ -78,7 +96,19 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
 
         {isRecording && (
           <p className={styles.recordingHint} role="status">
-            Listening… tap the mic again to stop
+            Listening… fields update as you speak. Tap the mic to stop.
+          </p>
+        )}
+
+        {!isRecording && speechError && (
+          <p className={styles.speechError} role="alert">
+            {speechError}
+          </p>
+        )}
+
+        {!speechSupported && (
+          <p className={styles.speechUnsupported}>
+            Voice input needs Chrome, Edge, or Safari. You can still type your journey.
           </p>
         )}
       </form>
